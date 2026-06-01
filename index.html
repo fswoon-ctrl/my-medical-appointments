@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Medical Appointments</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#eef6f6;color:#0d2e2e;font-size:15px}
+:root{
+  --teal:#0d7a6e;--teal-dark:#095a51;--teal-light:#e0f4f1;
+  --green:#1a9e6e;--green-light:#e6f7f0;
+  --blue:#1565c0;--blue-light:#e8f0fe;
+  --surface:#fff;--border:rgba(13,122,110,0.15);
+  --muted:#4a7a75;--danger:#d32f2f;--gold:#f59e0b;
+}
+.app{max-width:720px;margin:0 auto;padding:0.75rem}
+.header{display:flex;align-items:center;gap:10px;padding:1rem 1.1rem;background:linear-gradient(135deg,var(--teal-dark),var(--green));border-radius:14px;margin-bottom:1rem;color:#fff}
+.header-icon{width:40px;height:40px;background:rgba(255,255,255,0.2);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.header-info{flex:1;min-width:0}
+.header h1{font-size:17px;font-weight:700;color:#fff}
+.header p{font-size:11px;color:rgba(255,255,255,0.7);margin-top:1px}
+.notif-btn{background:rgba(255,255,255,0.2);border:none;border-radius:8px;padding:6px 10px;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;flex-shrink:0}
+.notif-btn.on{background:rgba(255,255,255,0.35)}
+.tabs{display:flex;gap:5px;margin-bottom:1rem;background:var(--teal-light);border-radius:10px;padding:4px}
+.tab{flex:1;padding:7px 4px;border:none;background:transparent;border-radius:8px;cursor:pointer;font-size:12px;font-weight:500;color:var(--teal);transition:all 0.15s}
+.tab.active{background:var(--teal);color:#fff;box-shadow:0 1px 4px rgba(13,122,110,0.3)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:0.9rem 1rem;margin-bottom:0.85rem}
+.card-title{font-size:14px;font-weight:600;color:var(--teal-dark);margin-bottom:0.85rem;display:flex;align-items:center;gap:6px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.form-full{margin-bottom:8px}
+label{display:block;font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:500}
+input,select,textarea{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;background:#f7fdfc;color:#0d2e2e;font-family:inherit}
+textarea{resize:vertical;min-height:60px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
+.btn{padding:9px 16px;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--teal);color:#fff}
+.btn-primary:hover{background:var(--teal-dark)}
+.btn-success{background:var(--green);color:#fff}
+.btn-danger{background:var(--danger);color:#fff;font-size:12px;padding:6px 10px}
+.btn-outline{background:transparent;border:1.5px solid var(--teal);color:var(--teal);font-size:12px;padding:6px 10px}
+.btn-full{width:100%;justify-content:center;margin-top:6px}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:0.85rem}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px;text-align:center}
+.stat-value{font-size:22px;font-weight:700;color:var(--teal)}
+.stat-label{font-size:11px;color:var(--muted);margin-top:2px}
+.stat.gold .stat-value{color:var(--gold)}
+.stat.green .stat-value{color:var(--green)}
+.appt-list{display:flex;flex-direction:column;gap:8px}
+.appt-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.appt-card.upcoming{border-left:4px solid var(--teal)}
+.appt-card.today{border-left:4px solid var(--gold)}
+.appt-card.past{border-left:4px solid #b0bec5;opacity:0.85}
+.appt-header{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;cursor:pointer}
+.appt-status{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.appt-status.upcoming{background:var(--teal-light);color:var(--teal)}
+.appt-status.today{background:#fff8e1;color:var(--gold)}
+.appt-status.past{background:#f5f5f5;color:#90a4ae}
+.appt-main{flex:1;min-width:0}
+.appt-doctor{font-size:14px;font-weight:600;color:var(--teal-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.appt-specialty{font-size:11px;color:var(--muted);margin-top:1px}
+.appt-right{text-align:right;flex-shrink:0}
+.appt-date{font-size:12px;font-weight:600;color:var(--teal)}
+.appt-time{font-size:11px;color:var(--muted);margin-top:1px}
+.appt-badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600;margin-top:3px}
+.badge-upcoming{background:var(--teal-light);color:var(--teal)}
+.badge-today{background:#fff8e1;color:#b45309}
+.badge-past{background:#f5f5f5;color:#607d8b}
+.appt-body{padding:0 12px 12px;display:none;border-top:1px solid var(--border)}
+.appt-body.open{display:block}
+.appt-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.appt-detail{background:#f7fdfc;border-radius:8px;padding:8px 10px}
+.appt-detail-label{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:3px}
+.appt-detail-value{font-size:12px;color:#0d2e2e}
+.remark-box{margin-top:8px;background:#f7fdfc;border-radius:8px;padding:8px 10px}
+.remark-label{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:3px}
+.remark-text{font-size:12px;color:#0d2e2e;white-space:pre-wrap}
+.appt-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.reminder-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 8px;border-radius:10px;background:var(--blue-light);color:var(--blue);font-weight:500;margin-top:4px}
+.actions-bar{display:flex;gap:8px;margin-bottom:0.85rem;flex-wrap:wrap}
+.empty{text-align:center;padding:2rem;color:var(--muted);font-size:13px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:100;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:18px 18px 0 0;padding:1.25rem 1rem;width:100%;max-width:720px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:15px;font-weight:600;color:var(--teal-dark);margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center}
+.btn-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);line-height:1}
+.toast{position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:var(--teal-dark);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:200;display:none;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(0,0,0,0.2)}
+.toast.show{display:flex}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.section-header .card-title{margin:0}
+@media(max-width:400px){
+  .form-row{grid-template-columns:1fr}
+  .appt-detail-grid{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"><i class="ti ti-check"></i><span id="toast-msg"></span></div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title">
+      <span>Edit Appointment</span>
+      <button class="btn-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-row">
+      <div><label>Doctor / Hospital</label><input id="e-doctor" placeholder="Dr. Ahmad / KPJ"></div>
+      <div><label>Specialty</label><input id="e-specialty" placeholder="e.g. Cardiology"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Date</label><input type="date" id="e-date"></div>
+      <div><label>Time</label><input type="time" id="e-time"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Location / Clinic</label><input id="e-location" placeholder="e.g. Level 3, Block A"></div>
+      <div><label>Reminder (mins before)</label>
+        <select id="e-reminder">
+          <option value="">No reminder</option>
+          <option value="30">30 minutes</option>
+          <option value="60">1 hour</option>
+          <option value="120">2 hours</option>
+          <option value="1440">1 day</option>
+          <option value="2880">2 days</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-full"><label>Pre-appointment remark</label><textarea id="e-pre" placeholder="e.g. Fast 8 hours before, bring previous reports…"></textarea></div>
+    <div class="form-full"><label>Post-appointment remark</label><textarea id="e-post" placeholder="e.g. Medication prescribed, follow-up in 3 months…"></textarea></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-primary btn-full" onclick="saveEdit()"><i class="ti ti-device-floppy"></i> Save</button>
+      <button class="btn btn-outline btn-full" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <div class="header">
+    <div class="header-icon"><i class="ti ti-stethoscope" aria-hidden="true"></i></div>
+    <div class="header-info">
+      <h1>My Medical Appointments</h1>
+      <p>Personal health appointment tracker</p>
+    </div>
+    <button class="notif-btn" id="notif-btn" onclick="toggleNotifications()">
+      <i class="ti ti-bell" aria-hidden="true"></i><span id="notif-label">Notify</span>
+    </button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('add')">➕ Add</button>
+    <button class="tab" onclick="switchTab('upcoming')">📅 Upcoming</button>
+    <button class="tab" onclick="switchTab('past')">🗂 Past</button>
+    <button class="tab" onclick="switchTab('all')">📋 All</button>
+  </div>
+
+  <!-- ADD TAB -->
+  <div id="tab-add">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-plus-circle"></i> New Appointment</div>
+      <div class="form-row">
+        <div><label>Doctor / Hospital *</label><input id="inp-doctor" placeholder="Dr. Ahmad / KPJ Damansara"></div>
+        <div><label>Specialty</label><input id="inp-specialty" placeholder="e.g. General, Cardiology"></div>
+      </div>
+      <div class="form-row">
+        <div><label>Date *</label><input type="date" id="inp-date"></div>
+        <div><label>Time *</label><input type="time" id="inp-time"></div>
+      </div>
+      <div class="form-row">
+        <div><label>Location / Clinic</label><input id="inp-location" placeholder="e.g. Level 2, Block B"></div>
+        <div><label>Reminder</label>
+          <select id="inp-reminder">
+            <option value="">No reminder</option>
+            <option value="30">30 minutes before</option>
+            <option value="60">1 hour before</option>
+            <option value="120">2 hours before</option>
+            <option value="1440">1 day before</option>
+            <option value="2880">2 days before</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-full"><label>Pre-appointment remark</label><textarea id="inp-pre" placeholder="e.g. Fast 8 hours before, bring IC and past reports…"></textarea></div>
+      <div class="form-full"><label>Post-appointment remark</label><textarea id="inp-post" placeholder="e.g. Medication prescribed, follow-up in 3 months…"></textarea></div>
+      <button class="btn btn-primary btn-full" onclick="addAppointment()"><i class="ti ti-calendar-plus"></i> Add Appointment</button>
+    </div>
+  </div>
+
+  <!-- UPCOMING TAB -->
+  <div id="tab-upcoming" style="display:none">
+    <div class="stats-grid">
+      <div class="stat gold"><div class="stat-value" id="st-today">0</div><div class="stat-label">Today</div></div>
+      <div class="stat"><div class="stat-value" id="st-upcoming">0</div><div class="stat-label">Upcoming</div></div>
+      <div class="stat green"><div class="stat-value" id="st-past">0</div><div class="stat-label">Completed</div></div>
+    </div>
+    <div class="actions-bar">
+      <button class="btn btn-outline" onclick="downloadPDF('upcoming')"><i class="ti ti-file-type-pdf"></i> Download PDF</button>
+      <button class="btn btn-outline" onclick="copyToClipboard('upcoming')"><i class="ti ti-copy"></i> Copy</button>
+    </div>
+    <div class="appt-list" id="list-upcoming"></div>
+  </div>
+
+  <!-- PAST TAB -->
+  <div id="tab-past" style="display:none">
+    <div class="actions-bar">
+      <button class="btn btn-outline" onclick="downloadPDF('past')"><i class="ti ti-file-type-pdf"></i> Download PDF</button>
+      <button class="btn btn-outline" onclick="copyToClipboard('past')"><i class="ti ti-copy"></i> Copy</button>
+    </div>
+    <div class="appt-list" id="list-past"></div>
+  </div>
+
+  <!-- ALL TAB -->
+  <div id="tab-all" style="display:none">
+    <div class="actions-bar">
+      <button class="btn btn-primary" onclick="downloadPDF('all')"><i class="ti ti-file-type-pdf"></i> Download All PDF</button>
+      <button class="btn btn-outline" onclick="copyToClipboard('all')"><i class="ti ti-copy"></i> Copy All</button>
+    </div>
+    <div class="appt-list" id="list-all"></div>
+  </div>
+</div>
+
+<script>
+let appts=JSON.parse(localStorage.getItem('med_appts')||'[]');
+let notifEnabled=false, editId=null, activeTab='add';
+let openCards=new Set();
+
+function save(){ localStorage.setItem('med_appts',JSON.stringify(appts)); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function fmtDate(d){ if(!d) return '—'; return new Date(d+'T00:00:00').toLocaleDateString('en-MY',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}); }
+function fmtTime(t){ if(!t) return '—'; const[h,m]=t.split(':'); return `${+h%12||12}:${m} ${+h>=12?'PM':'AM'}`; }
+function showToast(msg){ const t=document.getElementById('toast'); document.getElementById('toast-msg').textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800); }
+
+function switchTab(t){
+  activeTab=t;
+  ['add','upcoming','past','all'].forEach(x=>{ document.getElementById('tab-'+x).style.display=x===t?'block':'none'; });
+  document.querySelectorAll('.tab').forEach((el,i)=>{ el.classList.toggle('active',['add','upcoming','past','all'][i]===t); });
+  if(t==='upcoming') renderUpcoming();
+  if(t==='past') renderPast();
+  if(t==='all') renderAll();
+}
+
+function addAppointment(){
+  const doctor=document.getElementById('inp-doctor').value.trim();
+  const date=document.getElementById('inp-date').value;
+  const time=document.getElementById('inp-time').value;
+  if(!doctor||!date||!time){ alert('Please fill in Doctor, Date and Time.'); return; }
+  const a={
+    id:Date.now(), doctor, date, time,
+    specialty:document.getElementById('inp-specialty').value.trim(),
+    location:document.getElementById('inp-location').value.trim(),
+    reminder:document.getElementById('inp-reminder').value,
+    pre:document.getElementById('inp-pre').value.trim(),
+    post:document.getElementById('inp-post').value.trim()
+  };
+  appts.push(a);
+  appts.sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
+  save(); scheduleReminder(a);
+  ['inp-doctor','inp-specialty','inp-time','inp-location','inp-pre','inp-post'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('inp-date').value='';
+  document.getElementById('inp-reminder').value='';
+  showToast('Appointment added!');
+  switchTab('upcoming');
+}
+
+function deleteAppt(id){
+  if(!confirm('Delete this appointment?')) return;
+  appts=appts.filter(a=>a.id!==id); save(); openCards.delete(id);
+  renderUpcoming(); renderPast(); renderAll();
+  showToast('Appointment deleted.');
+}
+
+function openEdit(id){
+  editId=id; const a=appts.find(x=>x.id===id); if(!a) return;
+  document.getElementById('e-doctor').value=a.doctor||'';
+  document.getElementById('e-specialty').value=a.specialty||'';
+  document.getElementById('e-date').value=a.date||'';
+  document.getElementById('e-time').value=a.time||'';
+  document.getElementById('e-location').value=a.location||'';
+  document.getElementById('e-reminder').value=a.reminder||'';
+  document.getElementById('e-pre').value=a.pre||'';
+  document.getElementById('e-post').value=a.post||'';
+  document.getElementById('modal').classList.add('open');
+}
+
+function saveEdit(){
+  const a=appts.find(x=>x.id===editId); if(!a) return;
+  a.doctor=document.getElementById('e-doctor').value.trim();
+  a.specialty=document.getElementById('e-specialty').value.trim();
+  a.date=document.getElementById('e-date').value;
+  a.time=document.getElementById('e-time').value;
+  a.location=document.getElementById('e-location').value.trim();
+  a.reminder=document.getElementById('e-reminder').value;
+  a.pre=document.getElementById('e-pre').value.trim();
+  a.post=document.getElementById('e-post').value.trim();
+  if(!a.doctor||!a.date||!a.time){ alert('Doctor, Date and Time are required.'); return; }
+  appts.sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
+  save(); closeModal(); scheduleReminder(a);
+  renderUpcoming(); renderPast(); renderAll();
+  showToast('Appointment updated!');
+}
+
+function closeModal(){ document.getElementById('modal').classList.remove('open'); editId=null; }
+
+function getStatus(a){ const td=today(); if(a.date===td) return 'today'; return a.date>td?'upcoming':'past'; }
+
+function buildCard(a){
+  const st=getStatus(a);
+  const isOpen=openCards.has(a.id);
+  const reminderLabel=a.reminder?`<span class="reminder-badge"><i class="ti ti-bell" style="font-size:9px"></i> ${a.reminder>=1440?a.reminder/1440+'d':a.reminder+'min'} before</span>`:'';
+  const card=document.createElement('div');
+  card.className=`appt-card ${st}`; card.id='card-'+a.id;
+  card.innerHTML=`
+    <div class="appt-header" onclick="toggleCard(${a.id})">
+      <div class="appt-status ${st}"><i class="ti ti-${st==='past'?'circle-check':'calendar-event'}"></i></div>
+      <div class="appt-main">
+        <div class="appt-doctor">${a.doctor}</div>
+        <div class="appt-specialty">${a.specialty||'General'}</div>
+        ${reminderLabel}
+      </div>
+      <div class="appt-right">
+        <div class="appt-date">${fmtDate(a.date).split(',').slice(1).join(',').trim()}</div>
+        <div class="appt-time">${fmtTime(a.time)}</div>
+        <span class="appt-badge badge-${st}">${st==='today'?'TODAY':st==='upcoming'?'Upcoming':'Done'}</span>
+      </div>
+    </div>
+    <div class="appt-body${isOpen?' open':''}" id="body-${a.id}">
+      <div class="appt-detail-grid">
+        <div class="appt-detail"><div class="appt-detail-label">Full Date</div><div class="appt-detail-value">${fmtDate(a.date)}</div></div>
+        <div class="appt-detail"><div class="appt-detail-label">Time</div><div class="appt-detail-value">${fmtTime(a.time)}</div></div>
+        <div class="appt-detail"><div class="appt-detail-label">Location</div><div class="appt-detail-value">${a.location||'—'}</div></div>
+        <div class="appt-detail"><div class="appt-detail-label">Specialty</div><div class="appt-detail-value">${a.specialty||'—'}</div></div>
+      </div>
+      ${a.pre?`<div class="remark-box"><div class="remark-label">📝 Pre-appointment remark</div><div class="remark-text">${a.pre}</div></div>`:''}
+      ${a.post?`<div class="remark-box"><div class="remark-label">✅ Post-appointment remark</div><div class="remark-text">${a.post}</div></div>`:''}
+      <div class="appt-actions">
+        <button class="btn btn-outline" onclick="openEdit(${a.id})"><i class="ti ti-edit"></i> Edit</button>
+        <button class="btn btn-danger" onclick="deleteAppt(${a.id})"><i class="ti ti-trash"></i> Delete</button>
+      </div>
+    </div>`;
+  return card;
+}
+
+function toggleCard(id){
+  if(openCards.has(id)) openCards.delete(id); else openCards.add(id);
+  const body=document.getElementById('body-'+id);
+  if(body) body.classList.toggle('open',openCards.has(id));
+}
+
+function renderUpcoming(){
+  const td=today();
+  const list=appts.filter(a=>a.date>=td).sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
+  document.getElementById('st-today').textContent=appts.filter(a=>a.date===td).length;
+  document.getElementById('st-upcoming').textContent=appts.filter(a=>a.date>td).length;
+  document.getElementById('st-past').textContent=appts.filter(a=>a.date<td).length;
+  const el=document.getElementById('list-upcoming'); el.innerHTML='';
+  if(!list.length){ el.innerHTML='<div class="empty"><i class="ti ti-calendar-off" style="font-size:30px;display:block;margin-bottom:8px"></i>No upcoming appointments</div>'; return; }
+  list.forEach(a=>el.appendChild(buildCard(a)));
+}
+
+function renderPast(){
+  const list=appts.filter(a=>a.date<today()).sort((a,b)=>b.date.localeCompare(a.date)||b.time.localeCompare(a.time));
+  const el=document.getElementById('list-past'); el.innerHTML='';
+  if(!list.length){ el.innerHTML='<div class="empty"><i class="ti ti-history" style="font-size:30px;display:block;margin-bottom:8px"></i>No past appointments</div>'; return; }
+  list.forEach(a=>el.appendChild(buildCard(a)));
+}
+
+function renderAll(){
+  const list=[...appts].sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
+  const el=document.getElementById('list-all'); el.innerHTML='';
+  if(!list.length){ el.innerHTML='<div class="empty"><i class="ti ti-notes-off" style="font-size:30px;display:block;margin-bottom:8px"></i>No appointments yet</div>'; return; }
+  list.forEach(a=>el.appendChild(buildCard(a)));
+}
+
+async function toggleNotifications(){
+  if(!('Notification' in window)){ alert('Browser notifications not supported.'); return; }
+  if(Notification.permission==='denied'){ alert('Notifications blocked. Enable them in browser settings.'); return; }
+  if(Notification.permission!=='granted'){
+    const p=await Notification.requestPermission();
+    if(p!=='granted'){ showToast('Permission denied.'); return; }
+  }
+  notifEnabled=!notifEnabled;
+  document.getElementById('notif-btn').classList.toggle('on',notifEnabled);
+  document.getElementById('notif-label').textContent=notifEnabled?'On':'Notify';
+  showToast(notifEnabled?'Reminders enabled!':'Reminders disabled.');
+  if(notifEnabled) appts.forEach(scheduleReminder);
+}
+
+function scheduleReminder(a){
+  if(!notifEnabled||!a.reminder||Notification.permission!=='granted') return;
+  const apptTime=new Date(a.date+'T'+a.time);
+  const remindAt=new Date(apptTime.getTime()-a.reminder*60000);
+  const delay=remindAt-new Date();
+  if(delay<=0) return;
+  setTimeout(()=>{
+    new Notification('🏥 Medical Appointment Reminder',{
+      body:`${a.doctor} (${a.specialty||'General'}) at ${fmtTime(a.time)}${a.location?' — '+a.location:''}`,
+    });
+  },delay);
+}
+
+function getFilteredAppts(filter){
+  const td=today();
+  if(filter==='upcoming') return appts.filter(a=>a.date>=td).sort((a,b)=>a.date.localeCompare(b.date));
+  if(filter==='past') return appts.filter(a=>a.date<td).sort((a,b)=>a.date.localeCompare(b.date));
+  return [...appts].sort((a,b)=>a.date.localeCompare(b.date));
+}
+
+function downloadPDF(filter){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const list=getFilteredAppts(filter);
+  if(!list.length){ showToast('No appointments to export.'); return; }
+  const pageW=210, margin=14, contentW=pageW-margin*2;
+  let y=margin;
+  doc.setFillColor(9,90,81);
+  doc.rect(0,0,pageW,28,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(16); doc.setFont('helvetica','bold');
+  doc.text('My Medical Appointments',margin,12);
+  doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.text(`${filter==='upcoming'?'Upcoming':filter==='past'?'Past':'All'} appointments — Generated ${new Date().toLocaleDateString('en-MY')}`,margin,20);
+  y=36;
+  list.forEach((a,i)=>{
+    if(y>255){ doc.addPage(); y=margin; }
+    const hasRemarks=a.pre||a.post;
+    const cardH=hasRemarks?58:44;
+    doc.setFillColor(247,253,252);
+    doc.roundedRect(margin,y,contentW,cardH,3,3,'F');
+    doc.setDrawColor(13,122,110); doc.setLineWidth(0.4);
+    doc.roundedRect(margin,y,contentW,cardH,3,3,'S');
+    doc.setFillColor(13,122,110);
+    doc.circle(margin+6,y+7,4,'F');
+    doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','bold');
+    doc.text(String(i+1),margin+6,y+9,{align:'center'});
+    doc.setTextColor(9,90,81); doc.setFontSize(12); doc.setFont('helvetica','bold');
+    doc.text(a.doctor,margin+13,y+8);
+    doc.setTextColor(74,122,117); doc.setFontSize(9); doc.setFont('helvetica','normal');
+    doc.text(a.specialty||'General',margin+13,y+14);
+    doc.setTextColor(9,90,81); doc.setFontSize(9); doc.setFont('helvetica','bold');
+    doc.text(fmtDate(a.date),pageW-margin,y+8,{align:'right'});
+    doc.setFont('helvetica','normal'); doc.setTextColor(74,122,117);
+    doc.text(fmtTime(a.time),pageW-margin,y+14,{align:'right'});
+    doc.setTextColor(50,50,50); doc.setFontSize(8.5);
+    doc.text('📍 '+(a.location||'Location not specified'),margin+4,y+22);
+    if(a.reminder) doc.text('🔔 Reminder: '+(a.reminder>=1440?a.reminder/1440+' day(s)':a.reminder+' min')+' before',margin+4,y+29);
+    let ny=a.reminder?y+36:y+29;
+    if(a.pre){
+      doc.setTextColor(13,90,130); doc.setFont('helvetica','bold'); doc.text('Pre: ',margin+4,ny);
+      doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50);
+      const lines=doc.splitTextToSize(a.pre,contentW-22); doc.text(lines[0],margin+14,ny); ny+=6;
+    }
+    if(a.post){
+      doc.setTextColor(26,100,60); doc.setFont('helvetica','bold'); doc.text('Post: ',margin+4,ny);
+      doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50);
+      const lines=doc.splitTextToSize(a.post,contentW-24); doc.text(lines[0],margin+16,ny);
+    }
+    y+=cardH+6;
+  });
+  doc.setFontSize(8); doc.setTextColor(150,150,150);
+  doc.text('My Medical Appointments — Personal Health Tracker',pageW/2,290,{align:'center'});
+  doc.save(`medical-appointments-${filter}-${today()}.pdf`);
+  showToast('PDF downloaded!');
+}
+
+function copyToClipboard(filter){
+  const list=getFilteredAppts(filter);
+  if(!list.length){ showToast('No appointments to copy.'); return; }
+  const text=list.map((a,i)=>[
+    `${i+1}. ${a.doctor} (${a.specialty||'General'})`,
+    `   Date  : ${fmtDate(a.date)}`,
+    `   Time  : ${fmtTime(a.time)}`,
+    a.location?`   Location: ${a.location}`:'',
+    a.reminder?`   Reminder: ${a.reminder>=1440?a.reminder/1440+' day(s)':a.reminder+' min'} before`:'',
+    a.pre?`   Pre-remark : ${a.pre}`:'',
+    a.post?`   Post-remark: ${a.post}`:'',
+  ].filter(Boolean).join('\n')).join('\n\n');
+  navigator.clipboard.writeText('MY MEDICAL APPOINTMENTS\n'+'='.repeat(32)+'\n\n'+text)
+    .then(()=>showToast('Copied to clipboard!'))
+    .catch(()=>showToast('Copy failed. Please try again.'));
+}
+
+document.getElementById('inp-date').value=today();
+</script>
+</body>
+</html>
