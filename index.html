@@ -6,6 +6,7 @@
 <title>My Medical Appointments</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:#eef6f6;color:#0d2e2e;font-size:15px}
@@ -15,20 +16,48 @@ body{font-family:system-ui,sans-serif;background:#eef6f6;color:#0d2e2e;font-size
   --blue:#1565c0;--blue-light:#e8f0fe;
   --surface:#fff;--border:rgba(13,122,110,0.15);
   --muted:#4a7a75;--danger:#d32f2f;--gold:#f59e0b;
+  --pi-purple:#6528B4;--pi-purple-dark:#3D1570;
 }
 .app{max-width:720px;margin:0 auto;padding:0.75rem}
-.header{display:flex;align-items:center;gap:10px;padding:1rem 1.1rem;background:linear-gradient(135deg,var(--teal-dark),var(--green));border-radius:14px;margin-bottom:1rem;color:#fff}
-.header-icon{width:40px;height:40px;background:rgba(255,255,255,0.2);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+
+/* ── Login Screen ── */
+#login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem;background:linear-gradient(160deg,#eef6f6,#e8f0fe)}
+.login-logo{width:88px;height:88px;background:linear-gradient(135deg,var(--teal-dark),var(--green));border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:44px;color:#fff;margin:0 auto 1.25rem;box-shadow:0 8px 24px rgba(13,122,110,0.3)}
+.login-title{font-size:24px;font-weight:700;color:var(--teal-dark);margin-bottom:6px}
+.login-sub{font-size:14px;color:var(--muted);margin-bottom:2rem;line-height:1.7;max-width:300px}
+.btn-pi-login{display:inline-flex;align-items:center;gap:10px;padding:13px 28px;background:var(--pi-purple);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(101,40,180,0.3);transition:background 0.2s}
+.btn-pi-login:hover{background:var(--pi-purple-dark)}
+.btn-pi-login:disabled{opacity:0.6;cursor:not-allowed}
+.login-divider{display:flex;align-items:center;gap:10px;margin:1.25rem 0;color:var(--muted);font-size:12px;width:100%;max-width:280px}
+.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.btn-guest{display:inline-flex;align-items:center;gap:8px;padding:10px 24px;background:transparent;color:var(--teal);border:1.5px solid var(--teal);border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s}
+.btn-guest:hover{background:var(--teal-light)}
+.login-note{font-size:11px;color:var(--muted);margin-top:1.25rem;line-height:1.6;max-width:280px}
+.pi-badge{display:inline-flex;align-items:center;gap:5px;background:#f3eeff;border:1px solid rgba(101,40,180,0.2);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--pi-purple);font-weight:600;margin-bottom:1.5rem}
+
+/* ── Header ── */
+#main-app{display:none}
+.header{display:flex;align-items:center;gap:10px;padding:0.85rem 1rem;background:linear-gradient(135deg,var(--teal-dark),var(--green));border-radius:14px;margin-bottom:1rem}
+.header-icon{width:38px;height:38px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;flex-shrink:0}
 .header-info{flex:1;min-width:0}
-.header h1{font-size:17px;font-weight:700;color:#fff}
-.header p{font-size:11px;color:rgba(255,255,255,0.7);margin-top:1px}
-.notif-btn{background:rgba(255,255,255,0.2);border:none;border-radius:8px;padding:6px 10px;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;flex-shrink:0}
-.notif-btn.on{background:rgba(255,255,255,0.35)}
+.header h1{font-size:16px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.header p{font-size:11px;color:rgba(255,255,255,0.65);margin-top:1px}
+.header-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.user-badge{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,0.18);border-radius:20px;padding:3px 8px;font-size:11px;color:#fff;font-weight:500;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pi-user-icon{font-size:10px}
+.notif-btn{background:rgba(255,255,255,0.18);border:none;border-radius:8px;padding:4px 8px;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px}
+.notif-btn.on{background:rgba(255,200,0,0.35)}
+
+/* ── Tabs ── */
 .tabs{display:flex;gap:5px;margin-bottom:1rem;background:var(--teal-light);border-radius:10px;padding:4px}
 .tab{flex:1;padding:7px 4px;border:none;background:transparent;border-radius:8px;cursor:pointer;font-size:12px;font-weight:500;color:var(--teal);transition:all 0.15s}
 .tab.active{background:var(--teal);color:#fff;box-shadow:0 1px 4px rgba(13,122,110,0.3)}
+
+/* ── Cards ── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:0.9rem 1rem;margin-bottom:0.85rem}
 .card-title{font-size:14px;font-weight:600;color:var(--teal-dark);margin-bottom:0.85rem;display:flex;align-items:center;gap:6px}
+
+/* ── Form ── */
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
 .form-full{margin-bottom:8px}
 label{display:block;font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:500}
@@ -38,16 +67,19 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .btn{padding:9px 16px;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
 .btn-primary{background:var(--teal);color:#fff}
 .btn-primary:hover{background:var(--teal-dark)}
-.btn-success{background:var(--green);color:#fff}
 .btn-danger{background:var(--danger);color:#fff;font-size:12px;padding:6px 10px}
 .btn-outline{background:transparent;border:1.5px solid var(--teal);color:var(--teal);font-size:12px;padding:6px 10px}
 .btn-full{width:100%;justify-content:center;margin-top:6px}
+
+/* ── Stats ── */
 .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:0.85rem}
 .stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px;text-align:center}
 .stat-value{font-size:22px;font-weight:700;color:var(--teal)}
 .stat-label{font-size:11px;color:var(--muted);margin-top:2px}
 .stat.gold .stat-value{color:var(--gold)}
 .stat.green .stat-value{color:var(--green)}
+
+/* ── Appointment cards ── */
 .appt-list{display:flex;flex-direction:column;gap:8px}
 .appt-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
 .appt-card.upcoming{border-left:4px solid var(--teal)}
@@ -81,15 +113,22 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .reminder-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 8px;border-radius:10px;background:var(--blue-light);color:var(--blue);font-weight:500;margin-top:4px}
 .actions-bar{display:flex;gap:8px;margin-bottom:0.85rem;flex-wrap:wrap}
 .empty{text-align:center;padding:2rem;color:var(--muted);font-size:13px}
+
+/* ── Modal ── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:100;align-items:flex-end;justify-content:center}
 .modal-overlay.open{display:flex}
 .modal{background:#fff;border-radius:18px 18px 0 0;padding:1.25rem 1rem;width:100%;max-width:720px;max-height:90vh;overflow-y:auto}
 .modal-title{font-size:15px;font-weight:600;color:var(--teal-dark);margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center}
 .btn-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);line-height:1}
-.toast{position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:var(--teal-dark);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:200;display:none;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(0,0,0,0.2)}
+
+/* ── Toast ── */
+.toast{position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:var(--teal-dark);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:200;display:none;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(0,0,0,0.2);white-space:nowrap}
 .toast.show{display:flex}
-.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.section-header .card-title{margin:0}
+
+/* ── Footer ── */
+.app-footer{text-align:center;padding:0.75rem 0 0.25rem;font-size:11px;color:var(--muted)}
+.pi-footer-badge{display:inline-flex;align-items:center;gap:4px;font-weight:600;color:var(--pi-purple)}
+
 @media(max-width:400px){
   .form-row{grid-template-columns:1fr}
   .appt-detail-grid{grid-template-columns:1fr}
@@ -118,7 +157,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
     </div>
     <div class="form-row">
       <div><label>Location / Clinic</label><input id="e-location" placeholder="e.g. Level 3, Block A"></div>
-      <div><label>Reminder (mins before)</label>
+      <div><label>Reminder</label>
         <select id="e-reminder">
           <option value="">No reminder</option>
           <option value="30">30 minutes</option>
@@ -129,7 +168,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
         </select>
       </div>
     </div>
-    <div class="form-full"><label>Pre-appointment remark</label><textarea id="e-pre" placeholder="e.g. Fast 8 hours before, bring previous reports…"></textarea></div>
+    <div class="form-full"><label>Pre-appointment remark</label><textarea id="e-pre" placeholder="e.g. Fast 8 hours, bring reports…"></textarea></div>
     <div class="form-full"><label>Post-appointment remark</label><textarea id="e-post" placeholder="e.g. Medication prescribed, follow-up in 3 months…"></textarea></div>
     <div style="display:flex;gap:8px;margin-top:4px">
       <button class="btn btn-primary btn-full" onclick="saveEdit()"><i class="ti ti-device-floppy"></i> Save</button>
@@ -138,16 +177,48 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
   </div>
 </div>
 
+<!-- ══ LOGIN SCREEN ══ -->
+<div id="login-screen">
+  <div class="pi-badge"><i class="ti ti-circle-letter-p" style="font-size:13px"></i> Pi Network App</div>
+  <div class="login-logo"><i class="ti ti-stethoscope" aria-hidden="true"></i></div>
+  <div class="login-title">My Medical Appointments</div>
+  <div class="login-sub">Your personal health appointment tracker. Sign in to keep your data safe and private.</div>
+
+  <button class="btn-pi-login" id="btn-login" onclick="piLogin()">
+    <i class="ti ti-circle-letter-p" aria-hidden="true"></i> Sign in with Pi Network
+  </button>
+
+  <div class="login-divider">or</div>
+
+  <button class="btn-guest" onclick="guestLogin()">
+    <i class="ti ti-user" aria-hidden="true"></i> Continue as Guest
+  </button>
+
+  <div class="login-note">
+    Signing in with Pi Network links your appointments to your Pi account.<br>
+    Guest mode saves data on this device only.
+  </div>
+</div>
+
+<!-- ══ MAIN APP ══ -->
+<div id="main-app">
 <div class="app">
+
   <div class="header">
     <div class="header-icon"><i class="ti ti-stethoscope" aria-hidden="true"></i></div>
     <div class="header-info">
       <h1>My Medical Appointments</h1>
-      <p>Personal health appointment tracker</p>
+      <p>Personal health tracker</p>
     </div>
-    <button class="notif-btn" id="notif-btn" onclick="toggleNotifications()">
-      <i class="ti ti-bell" aria-hidden="true"></i><span id="notif-label">Notify</span>
-    </button>
+    <div class="header-right">
+      <div class="user-badge">
+        <i class="ti ti-user pi-user-icon" aria-hidden="true"></i>
+        <span id="user-name">Guest</span>
+      </div>
+      <button class="notif-btn" id="notif-btn" onclick="toggleNotifications()">
+        <i class="ti ti-bell" aria-hidden="true"></i><span id="notif-label">Notify</span>
+      </button>
+    </div>
   </div>
 
   <div class="tabs">
@@ -196,7 +267,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
       <div class="stat green"><div class="stat-value" id="st-past">0</div><div class="stat-label">Completed</div></div>
     </div>
     <div class="actions-bar">
-      <button class="btn btn-outline" onclick="downloadPDF('upcoming')"><i class="ti ti-file-type-pdf"></i> Download PDF</button>
+      <button class="btn btn-outline" onclick="downloadPDF('upcoming')"><i class="ti ti-file-type-pdf"></i> PDF</button>
       <button class="btn btn-outline" onclick="copyToClipboard('upcoming')"><i class="ti ti-copy"></i> Copy</button>
     </div>
     <div class="appt-list" id="list-upcoming"></div>
@@ -205,7 +276,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
   <!-- PAST TAB -->
   <div id="tab-past" style="display:none">
     <div class="actions-bar">
-      <button class="btn btn-outline" onclick="downloadPDF('past')"><i class="ti ti-file-type-pdf"></i> Download PDF</button>
+      <button class="btn btn-outline" onclick="downloadPDF('past')"><i class="ti ti-file-type-pdf"></i> PDF</button>
       <button class="btn btn-outline" onclick="copyToClipboard('past')"><i class="ti ti-copy"></i> Copy</button>
     </div>
     <div class="appt-list" id="list-past"></div>
@@ -219,19 +290,74 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
     </div>
     <div class="appt-list" id="list-all"></div>
   </div>
+
+  <div class="app-footer">
+    <span class="pi-footer-badge"><i class="ti ti-circle-letter-p" style="font-size:13px"></i> Pi Network App</span>
+  </div>
+</div>
 </div>
 
 <script>
-let appts=JSON.parse(localStorage.getItem('med_appts')||'[]');
-let notifEnabled=false, editId=null, activeTab='add';
-let openCards=new Set();
+let appts=[], notifEnabled=false, editId=null, activeTab='add';
+let openCards=new Set(), piUser=null, isGuest=false;
 
-function save(){ localStorage.setItem('med_appts',JSON.stringify(appts)); }
+// ── Pi SDK ──────────────────────────────────────────────
+function initPi(){
+  try{ Pi.init({version:'2.0',sandbox:false}); }
+  catch(e){ console.warn('Pi SDK not available:',e); }
+}
+
+async function piLogin(){
+  const btn=document.getElementById('btn-login');
+  btn.disabled=true;
+  btn.innerHTML='<i class="ti ti-loader"></i> Signing in…';
+  try{
+    const auth=await Pi.authenticate(['username','payments'], handleIncompletePayment);
+    piUser=auth.user;
+    isGuest=false;
+    document.getElementById('user-name').textContent=piUser.username||'Pioneer';
+    startApp();
+    showToast('Welcome, '+( piUser.username||'Pioneer')+'! 👋');
+  } catch(e){
+    console.error('Pi login error:',e);
+    btn.disabled=false;
+    btn.innerHTML='<i class="ti ti-circle-letter-p"></i> Sign in with Pi Network';
+    alert('Sign-in failed. Please make sure you are using Pi Browser.');
+  }
+}
+
+function guestLogin(){
+  isGuest=true; piUser=null;
+  document.getElementById('user-name').textContent='Guest';
+  startApp();
+  showToast('Continuing as Guest');
+}
+
+function handleIncompletePayment(payment){
+  console.log('Incomplete Pi payment found:',payment);
+}
+
+function startApp(){
+  loadData();
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('main-app').style.display='block';
+  document.getElementById('inp-date').value=today();
+  renderUpcoming();
+  switchTab('add');
+}
+
+// ── Storage (per Pi user or guest) ──────────────────────
+function storageKey(){ return 'med_appts_'+(piUser?piUser.uid:'guest'); }
+function save(){ localStorage.setItem(storageKey(),JSON.stringify(appts)); }
+function loadData(){ appts=JSON.parse(localStorage.getItem(storageKey())||'[]'); }
+
+// ── Helpers ─────────────────────────────────────────────
 function today(){ return new Date().toISOString().slice(0,10); }
 function fmtDate(d){ if(!d) return '—'; return new Date(d+'T00:00:00').toLocaleDateString('en-MY',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}); }
 function fmtTime(t){ if(!t) return '—'; const[h,m]=t.split(':'); return `${+h%12||12}:${m} ${+h>=12?'PM':'AM'}`; }
 function showToast(msg){ const t=document.getElementById('toast'); document.getElementById('toast-msg').textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800); }
 
+// ── Tabs ─────────────────────────────────────────────────
 function switchTab(t){
   activeTab=t;
   ['add','upcoming','past','all'].forEach(x=>{ document.getElementById('tab-'+x).style.display=x===t?'block':'none'; });
@@ -241,6 +367,7 @@ function switchTab(t){
   if(t==='all') renderAll();
 }
 
+// ── CRUD ─────────────────────────────────────────────────
 function addAppointment(){
   const doctor=document.getElementById('inp-doctor').value.trim();
   const date=document.getElementById('inp-date').value;
@@ -273,27 +400,17 @@ function deleteAppt(id){
 
 function openEdit(id){
   editId=id; const a=appts.find(x=>x.id===id); if(!a) return;
-  document.getElementById('e-doctor').value=a.doctor||'';
-  document.getElementById('e-specialty').value=a.specialty||'';
-  document.getElementById('e-date').value=a.date||'';
-  document.getElementById('e-time').value=a.time||'';
-  document.getElementById('e-location').value=a.location||'';
-  document.getElementById('e-reminder').value=a.reminder||'';
-  document.getElementById('e-pre').value=a.pre||'';
-  document.getElementById('e-post').value=a.post||'';
+  ['doctor','specialty','date','time','location','reminder','pre','post'].forEach(f=>{
+    document.getElementById('e-'+f).value=a[f]||'';
+  });
   document.getElementById('modal').classList.add('open');
 }
 
 function saveEdit(){
   const a=appts.find(x=>x.id===editId); if(!a) return;
-  a.doctor=document.getElementById('e-doctor').value.trim();
-  a.specialty=document.getElementById('e-specialty').value.trim();
-  a.date=document.getElementById('e-date').value;
-  a.time=document.getElementById('e-time').value;
-  a.location=document.getElementById('e-location').value.trim();
-  a.reminder=document.getElementById('e-reminder').value;
-  a.pre=document.getElementById('e-pre').value.trim();
-  a.post=document.getElementById('e-post').value.trim();
+  ['doctor','specialty','date','time','location','reminder','pre','post'].forEach(f=>{
+    a[f]=document.getElementById('e-'+f).value.trim();
+  });
   if(!a.doctor||!a.date||!a.time){ alert('Doctor, Date and Time are required.'); return; }
   appts.sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
   save(); closeModal(); scheduleReminder(a);
@@ -302,12 +419,11 @@ function saveEdit(){
 }
 
 function closeModal(){ document.getElementById('modal').classList.remove('open'); editId=null; }
-
 function getStatus(a){ const td=today(); if(a.date===td) return 'today'; return a.date>td?'upcoming':'past'; }
 
+// ── Render ────────────────────────────────────────────────
 function buildCard(a){
-  const st=getStatus(a);
-  const isOpen=openCards.has(a.id);
+  const st=getStatus(a), isOpen=openCards.has(a.id);
   const reminderLabel=a.reminder?`<span class="reminder-badge"><i class="ti ti-bell" style="font-size:9px"></i> ${a.reminder>=1440?a.reminder/1440+'d':a.reminder+'min'} before</span>`:'';
   const card=document.createElement('div');
   card.className=`appt-card ${st}`; card.id='card-'+a.id;
@@ -360,7 +476,7 @@ function renderUpcoming(){
 }
 
 function renderPast(){
-  const list=appts.filter(a=>a.date<today()).sort((a,b)=>b.date.localeCompare(a.date)||b.time.localeCompare(a.time));
+  const list=appts.filter(a=>a.date<today()).sort((a,b)=>b.date.localeCompare(a.date));
   const el=document.getElementById('list-past'); el.innerHTML='';
   if(!list.length){ el.innerHTML='<div class="empty"><i class="ti ti-history" style="font-size:30px;display:block;margin-bottom:8px"></i>No past appointments</div>'; return; }
   list.forEach(a=>el.appendChild(buildCard(a)));
@@ -373,9 +489,10 @@ function renderAll(){
   list.forEach(a=>el.appendChild(buildCard(a)));
 }
 
+// ── Notifications ─────────────────────────────────────────
 async function toggleNotifications(){
   if(!('Notification' in window)){ alert('Browser notifications not supported.'); return; }
-  if(Notification.permission==='denied'){ alert('Notifications blocked. Enable them in browser settings.'); return; }
+  if(Notification.permission==='denied'){ alert('Notifications are blocked. Enable in browser settings.'); return; }
   if(Notification.permission!=='granted'){
     const p=await Notification.requestPermission();
     if(p!=='granted'){ showToast('Permission denied.'); return; }
@@ -383,7 +500,7 @@ async function toggleNotifications(){
   notifEnabled=!notifEnabled;
   document.getElementById('notif-btn').classList.toggle('on',notifEnabled);
   document.getElementById('notif-label').textContent=notifEnabled?'On':'Notify';
-  showToast(notifEnabled?'Reminders enabled!':'Reminders disabled.');
+  showToast(notifEnabled?'Reminders enabled! 🔔':'Reminders disabled.');
   if(notifEnabled) appts.forEach(scheduleReminder);
 }
 
@@ -400,6 +517,7 @@ function scheduleReminder(a){
   },delay);
 }
 
+// ── PDF ───────────────────────────────────────────────────
 function getFilteredAppts(filter){
   const td=today();
   if(filter==='upcoming') return appts.filter(a=>a.date>=td).sort((a,b)=>a.date.localeCompare(b.date));
@@ -408,20 +526,19 @@ function getFilteredAppts(filter){
 }
 
 function downloadPDF(filter){
-  const {jsPDF}=window.jspdf;
+  const{jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const list=getFilteredAppts(filter);
   if(!list.length){ showToast('No appointments to export.'); return; }
-  const pageW=210, margin=14, contentW=pageW-margin*2;
+  const pageW=210,margin=14,contentW=pageW-margin*2;
   let y=margin;
-  doc.setFillColor(9,90,81);
-  doc.rect(0,0,pageW,28,'F');
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(16); doc.setFont('helvetica','bold');
-  doc.text('My Medical Appointments',margin,12);
+  doc.setFillColor(9,90,81); doc.rect(0,0,pageW,30,'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(16); doc.setFont('helvetica','bold');
+  doc.text('My Medical Appointments',margin,13);
   doc.setFontSize(9); doc.setFont('helvetica','normal');
-  doc.text(`${filter==='upcoming'?'Upcoming':filter==='past'?'Past':'All'} appointments — Generated ${new Date().toLocaleDateString('en-MY')}`,margin,20);
-  y=36;
+  const userName=piUser?piUser.username:'Guest';
+  doc.text(`${filter==='upcoming'?'Upcoming':filter==='past'?'Past':'All'} — ${userName} — ${new Date().toLocaleDateString('en-MY')}`,margin,21);
+  y=38;
   list.forEach((a,i)=>{
     if(y>255){ doc.addPage(); y=margin; }
     const hasRemarks=a.pre||a.post;
@@ -430,8 +547,7 @@ function downloadPDF(filter){
     doc.roundedRect(margin,y,contentW,cardH,3,3,'F');
     doc.setDrawColor(13,122,110); doc.setLineWidth(0.4);
     doc.roundedRect(margin,y,contentW,cardH,3,3,'S');
-    doc.setFillColor(13,122,110);
-    doc.circle(margin+6,y+7,4,'F');
+    doc.setFillColor(13,122,110); doc.circle(margin+6,y+7,4,'F');
     doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','bold');
     doc.text(String(i+1),margin+6,y+9,{align:'center'});
     doc.setTextColor(9,90,81); doc.setFontSize(12); doc.setFont('helvetica','bold');
@@ -449,30 +565,31 @@ function downloadPDF(filter){
     if(a.pre){
       doc.setTextColor(13,90,130); doc.setFont('helvetica','bold'); doc.text('Pre: ',margin+4,ny);
       doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50);
-      const lines=doc.splitTextToSize(a.pre,contentW-22); doc.text(lines[0],margin+14,ny); ny+=6;
+      doc.text(doc.splitTextToSize(a.pre,contentW-22)[0],margin+14,ny); ny+=6;
     }
     if(a.post){
       doc.setTextColor(26,100,60); doc.setFont('helvetica','bold'); doc.text('Post: ',margin+4,ny);
       doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50);
-      const lines=doc.splitTextToSize(a.post,contentW-24); doc.text(lines[0],margin+16,ny);
+      doc.text(doc.splitTextToSize(a.post,contentW-24)[0],margin+16,ny);
     }
     y+=cardH+6;
   });
   doc.setFontSize(8); doc.setTextColor(150,150,150);
-  doc.text('My Medical Appointments — Personal Health Tracker',pageW/2,290,{align:'center'});
+  doc.text('My Medical Appointments — Pi Network App',pageW/2,290,{align:'center'});
   doc.save(`medical-appointments-${filter}-${today()}.pdf`);
   showToast('PDF downloaded!');
 }
 
+// ── Copy ──────────────────────────────────────────────────
 function copyToClipboard(filter){
   const list=getFilteredAppts(filter);
   if(!list.length){ showToast('No appointments to copy.'); return; }
   const text=list.map((a,i)=>[
     `${i+1}. ${a.doctor} (${a.specialty||'General'})`,
-    `   Date  : ${fmtDate(a.date)}`,
-    `   Time  : ${fmtTime(a.time)}`,
-    a.location?`   Location: ${a.location}`:'',
-    a.reminder?`   Reminder: ${a.reminder>=1440?a.reminder/1440+' day(s)':a.reminder+' min'} before`:'',
+    `   Date     : ${fmtDate(a.date)}`,
+    `   Time     : ${fmtTime(a.time)}`,
+    a.location?`   Location : ${a.location}`:'',
+    a.reminder?`   Reminder : ${a.reminder>=1440?a.reminder/1440+' day(s)':a.reminder+' min'} before`:'',
     a.pre?`   Pre-remark : ${a.pre}`:'',
     a.post?`   Post-remark: ${a.post}`:'',
   ].filter(Boolean).join('\n')).join('\n\n');
@@ -481,7 +598,8 @@ function copyToClipboard(filter){
     .catch(()=>showToast('Copy failed. Please try again.'));
 }
 
-document.getElementById('inp-date').value=today();
+// ── Init ──────────────────────────────────────────────────
+initPi();
 </script>
 </body>
 </html>
